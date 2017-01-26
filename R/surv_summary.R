@@ -39,7 +39,7 @@ NULL
 #'
 #'
 #'@export
-surv_summary <- function (x){
+surv_summary <- function (x, data = NULL){
   res <- as.data.frame(.compact(unclass(x)[c("time", "n.risk",
                                             "n.event", "n.censor")]))
   if (inherits(x, "survfitms")) {
@@ -68,8 +68,8 @@ surv_summary <- function (x){
     res$strata <- rep(names(x$strata), x$strata)
     res$strata <- .clean_strata(res$strata, x)
     # Add column for each variable in survival fit
-    variables <- .get_variables(res$strata, x)
-    for(variable in variables) res[[variable]] <- .get_variable_value(variable, res$strata, x)
+    variables <- .get_variables(res$strata, x, data = data)
+    for(variable in variables) res[[variable]] <- .get_variable_value(variable, res$strata, x, data = data)
   }
   structure(res, class = c("data.frame", "surv_summary"))
   attr(res, "table") <-  as.data.frame(summary(x)$table)
@@ -82,26 +82,28 @@ surv_summary <- function (x){
 # ++++++++++++++++++
 # Get variable names in strata
 # strata is a vector
-.get_variables <- function(strata, fit){
+.get_variables <- function(strata, fit, data = NULL){
   variables <- sapply(as.vector(strata),
                       function(x){
                         x <- unlist(strsplit(x, "=|,\\s+", perl=TRUE))
                         x[seq(1, length(x), 2)]
                         })
   variables <- unique(as.vector(variables))
-  variables <- intersect(variables, colnames(eval(fit$call$data) ))
+  data <- if(is.null(data)) eval(fit$call$data) else data
+  variables <- intersect(variables, colnames(data))
   variables
 }
 
 # level of a given variable
-.get_variable_value <- function(variable, strata, fit){
+.get_variable_value <- function(variable, strata, fit, data = NULL){
   res <- sapply(as.vector(strata), function(x){
           x <- unlist(strsplit(x, "=|(\\s+)?,\\s+", perl=TRUE))
           index <- grep(paste0("^", variable, "$"), x)
           .trim(x[index+1])
         })
   res <- as.vector(res)
-  var_levels <- levels(eval(fit$call$data)[, variable])
+  data <- if(is.null(data)) eval(fit$call$data) else data
+  var_levels <- levels(data[, variable])
   if(!is.null(var_levels)) res <- factor(res, levels = var_levels)
   else res <- as.factor(res)
   res

@@ -291,6 +291,7 @@ ggsurvplot <- function(fit, fun = NULL,
                        ncensor.plot = FALSE, ncensor.plot.title = NULL, ncensor.plot.subtitle = NULL, ncensor.plot.caption = NULL,
                        surv.median.line = c("none", "hv", "h", "v"),
                        ggtheme = theme_classic2(),
+                       data = NULL,
                        ...
                        ){
 
@@ -320,7 +321,7 @@ ggsurvplot <- function(fit, fun = NULL,
   }
 
   # Data for survival plot
-  d <- surv_summary(fit)
+  d <- surv_summary(fit, data = data)
 
   # Number of strata and strata names
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -695,8 +696,8 @@ p <- p + theme(legend.key.height = NULL, legend.key.width = NULL,
   risk.data$abs_pct.risk <- paste0(risk.data$n.risk, " (", risk.data$pct.risk, ")")
 
   if(!is.null(fit$strata)){
-    variables <- .get_variables(risk.data$strata, fit)
-    for(variable in variables) risk.data[[variable]] <- .get_variable_value(variable, risk.data$strata, fit)
+    variables <- .get_variables(risk.data$strata, fit, data = data)
+    for(variable in variables) risk.data[[variable]] <- .get_variable_value(variable, risk.data$strata, fit, data = data)
   }
 
 
@@ -786,8 +787,8 @@ p <- p + theme(legend.key.height = NULL, legend.key.width = NULL,
     base$strata <- factor(strata, levels = strata)
     # update variable values
     if(!inherits(fit, "survfit.cox")){
-    variables <- .get_variables(base$strata,  fit)
-    for(variable in variables) base[[variable]] <- .get_variable_value(variable, base$strata, fit)
+    variables <- .get_variables(base$strata,  fit, data = data)
+    for(variable in variables) base[[variable]] <- .get_variable_value(variable, base$strata, fit, data = data)
     }
   }
   d <- rbind(base, d)
@@ -872,8 +873,8 @@ p <- p + theme(legend.key.height = NULL, legend.key.width = NULL,
                        y2 = rep(med_y, length(surv_median)),
                        strata = .clean_strata(rownames(.table)))
       if(!is.null(fit$strata)){
-        variables <- .get_variables(df$strata, fit)
-        for(variable in variables) df[[variable]] <- .get_variable_value(variable, df$strata, fit)
+        variables <- .get_variables(df$strata, fit, data = data)
+        for(variable in variables) df[[variable]] <- .get_variable_value(variable, df$strata, fit, data = data)
       }
       df <- stats::na.omit(df)
 
