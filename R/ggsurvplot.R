@@ -418,7 +418,7 @@ ggsurvplot <- function(fit, fun = NULL,
 
   # Add pvalue
   if(pval & !is.null(fit$strata)){
-    pval <- .get_pvalue(fit)
+    pval <- .get_pvalue(fit, data = data)
     pvaltxt <- ifelse(pval < 1e-04, "p < 0.0001",
                     paste("p =", signif(pval, 2)))
 
@@ -647,14 +647,16 @@ p <- p + theme(legend.key.height = NULL, legend.key.width = NULL,
 
 
 # get survdiff pvalue
-.get_pvalue <- function(fit){
+.get_pvalue <- function(fit, data = NULL){
   # One group
   if(length(levels(summary(fit)$strata)) == 0)  return(NULL)
     ssubset <- fit$call$subset
+    data <- if(is.null(data)) eval(fit$call$data) else data
+
     if(is.null(ssubset))
-      sdiff <- survival::survdiff(eval(fit$call$formula), data = eval(fit$call$data))
+      sdiff <- survival::survdiff(eval(fit$call$formula), data = data)
     else
-      sdiff <- survival::survdiff(eval(fit$call$formula), data = eval(fit$call$data),
+      sdiff <- survival::survdiff(eval(fit$call$formula), data = data,
                                      subset = eval(fit$call$subset))
     pvalue <- stats::pchisq(sdiff$chisq, length(sdiff$n) - 1, lower.tail = FALSE)
     return (pvalue)
